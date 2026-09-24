@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+
+:root { --ink: #17201e; --muted: #7b8581; --line: #e8ece9; --mint: #d8f7e7; --green: #2ba86b; --navy: #1c2825; }
+* { box-sizing: border-box; padding: 0; margin: 0; }
+html, body { min-height: 100%; }
+body { color: var(--ink); background: #f8faf9; font-family: "DM Sans", Arial, sans-serif; -webkit-font-smoothing: auto; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button, a, input, select { transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes modalIn { from { opacity: 0; transform: translateY(15px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes popIn { from { opacity: 0; transform: scale(.75); } to { opacity: 1; transform: scale(1); } }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 #43bd7c55; } 50% { box-shadow: 0 0 0 7px #43bd7c00; } }
+@keyframes shimmer { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }

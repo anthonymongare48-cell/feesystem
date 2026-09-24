@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id          String        @id @default(cuid())
+  admissionNo String        @unique
+  firstName   String
+  lastName    String
+  className   String
+  guardian    String?
+  guardianPhone String?
+  status      StudentStatus  @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  invoices    Invoice[]
+  payments    Payment[]
+  classId     String?
+  schoolClass SchoolClass?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  attendance  Attendance[]
+  healthRecord HealthRecord?
+  riskFlags   StudentRiskFlag[]
+
+  @@index([lastName, firstName])
+  @@index([className, status])
+}
+
+model FeeStructure {
+  id          String    @id @default(cuid())
+  name        String
+  academicYear String
+  term        Term
+  amount      Decimal   @db.Decimal(12, 2)
+  dueDate     DateTime
+  createdAt   DateTime  @default(now())
+  invoices    Invoice[]
+
+  @@unique([name, academicYear, term])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  studentId     String
+  feeStructureId String
+  amount        Decimal       @db.Decimal(12, 2)
+  dueDate       DateTime
+  status        InvoiceStatus @default(ISSUED)
+  createdAt     DateTime      @default(now())
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  feeStructure  FeeStructure  @relation(fields: [feeStructureId], references: [id], onDelete: Restrict)
+  payments      Payment[]
+
+  @@index([studentId, status])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  receiptNumber String        @unique
+  studentId     String
+  invoiceId     String?
+  amount        Decimal       @db.Decimal(12, 2)
+  method        PaymentMethod
+  reference     String?
+  paidAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  invoice       Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([paidAt])
+  @@index([studentId, paidAt])
+}
+
+model SchoolClass {
+  id        String       @id @default(cuid())
+  name      String
+  grade     String
+  section   String?
+  academicYear String
+  students  Student[]
+  subjects  Subject[]
+  createdAt DateTime     @default(now())
+}
+
+model Subject {
+  id        String      @id @default(cuid())
+  name      String
+  code      String      @unique
+  classId   String
+  class     SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+}
+
+model StaffMember {
+  id        String      @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String      @unique
+  phone     String?
+  role      StaffRole   @default(TEACHER)
+  status    StaffStatus @default(ACTIVE)
+  createdAt DateTime    @default(now())
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  studentId String
+  date      DateTime
+  status    AttendanceStatus
+  note      String?
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+  @@index([date, status])
+}
+
+model Assessment {
+  id        String   @id @default(cuid())
+  title     String
+  subject   String
+  className String
+  date      DateTime
+  maxScore  Int
+  createdAt DateTime @default(now())
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  audience  AnnouncementAudience @default(ALL)
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Vehicle {
+  id             String        @id @default(cuid())
+  registrationNo String        @unique
+  routeName      String
+  driverName     String
+  capacity       Int
+  status         VehicleStatus  @default(ACTIVE)
+  latitude       Decimal?       @db.Decimal(10, 7)
+  longitude      Decimal?       @db.Decimal(10, 7)
+  lastInspection DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  @@index([routeName, status])
+}
+
+model InventoryItem {
+  id             String        @id @default(cuid())
+  name           String
+  category       String
+  quantity       Int           @default(0)
+  reorderLevel   Int           @default(0)
+  unitCost       Decimal?      @db.Decimal(12, 2)
+  supplier       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  @@index([category, quantity])
+}
+
+model VisitorLog {
+  id           String        @id @default(cuid())
+  visitorName  String
+  hostName     String
+  badgeCode    String        @unique
+  checkedInAt  DateTime      @default(now())
+  checkedOutAt DateTime?
+  restricted   Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  @@index([checkedInAt, checkedOutAt])
+}
+
+model HealthRecord {
+  id           String   @id @default(cuid())
+  studentId    String
+  allergies    String?
+  medications  String?
+  vaccinations String?
+  emergencyNote String?
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  @@unique([studentId])
+}
+
+model AlumniProfile {
+  id          String   @id @default(cuid())
+  studentId   String?
+  fullName    String
+  graduationYear Int
+  email       String?
+  jobTitle    String?
+  company     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([graduationYear])
+}
+
+model StudentRiskFlag {
+  id             String   @id @default(cuid())
+  studentId      String
+  riskScore      Int
+  signals        String
+  status         RiskFlagStatus @default(OPEN)
+  reviewedAt     DateTime?
+  createdAt      DateTime @default(now())
+  student        Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  @@index([status, riskScore])
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+}
+
+enum Term {
+  ONE
+  TWO
+  THREE
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  MOBILE_MONEY
+}
+
+enum StaffRole {
+  TEACHER
+  ADMINISTRATOR
+  FINANCE
+  SUPPORT
+}
+
+enum StaffStatus {
+  ACTIVE
+  ON_LEAVE
+  INACTIVE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum AnnouncementAudience {
+  ALL
+  STAFF
+  PARENTS
+  STUDENTS
+}
+
+enum VehicleStatus {
+  ACTIVE
+  IN_SERVICE
+  OUT_OF_SERVICE
+}
+
+enum RiskFlagStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+}
